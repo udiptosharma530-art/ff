@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire Player Info Checker</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e1e2f, #0f0f1a);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: #2a2a40;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #ff9d00;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #1e1e2f;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #ff9d00;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #ff9d00;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #e08b00;
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #1e1e2f;
+            border-radius: 10px;
+            display: none;
+            text-align: left;
+        }
+
+        .result-item {
+            margin-bottom: 10px;
+            font-size: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 6px;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .error {
+            color: #ff4d4d;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .loading {
+            margin-top: 15px;
+            color: #ff9d00;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🔥 FF Player Checker</h2>
+
+    <div class="input-group">
+        <label for="uid">Player UID</label>
+        <input type="text" id="uid" placeholder="যেমন: 2312730961">
+    </div>
+
+    <div class="input-group">
+        <label for="region">Region</label>
+        <select id="region">
+            <option value="BD">Bangladesh (BD)</option>
+            <option value="IND">India (IND)</option>
+            <option value="SG">Singapore (SG)</option>
+        </select>
+    </div>
+
+    <button onclick="checkPlayerInfo()">তথ্য খুঁজুন</button>
+
+    <div class="loading" id="loading">অনুগ্রহ করে অপেক্ষা করুন...</div>
+    <div class="error" id="error"></div>
+
+    <div class="result-box" id="resultBox">
+        <div class="result-item"><strong>নাম:</strong> <span id="pName">-</span></div>
+        <div class="result-item"><strong>লেভেল:</strong> <span id="pLevel">-</span></div>
+        <div class="result-item"><strong>লাইক:</strong> <span id="pLikes">-</span></div>
+        <div class="result-item"><strong>এক্সপি (EXP):</strong> <span id="pExp">-</span></div>
+    </div>
+</div>
+
+<script>
+    const API_KEY = "Cfup0cdGyYSNWsmAgZRwmVQE_B3AVyqf5_9uenhNy30"; // আপনার API Key
+
+    async function checkPlayerInfo() {
+        const uid = document.getElementById('uid').value.trim();
+        const region = document.getElementById('region').value;
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const resultBox = document.getElementById('resultBox');
+
+        if (!uid) {
+            alert("দয়া করে প্লেয়ারের UID বসান!");
+            return;
+        }
+
+        // রিকুয়েস্ট পাঠানোর প্রস্তুতি
+        loading.style.display = 'block';
+        error.style.display = 'none';
+        resultBox.style.display = 'none';
+
+        try {
+            const url = `https://api.gameskinbo.com/ff-info/get?uid=${uid}&region=${region}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'x-api-key': API_KEY
+                }
+            });
+
+            const data = await response.json();
+            loading.style.display = 'none';
+
+            if (response.ok && data.AccountInfo) {
+                document.getElementById('pName').innerText = data.AccountInfo.AccountName || "N/A";
+                document.getElementById('pLevel').innerText = data.AccountInfo.AccountLevel || "N/A";
+                document.getElementById('pLikes').innerText = data.AccountInfo.AccountLikes || "N/A";
+                document.getElementById('pExp').innerText = data.AccountInfo.AccountEXP || "N/A";
+                resultBox.style.display = 'block';
+            } else {
+                error.innerText = data.message || "প্লেয়ারের তথ্য পাওয়া যায়নি বা UID ভুল!";
+                error.style.display = 'block';
+            }
+        } catch (err) {
+            loading.style.display = 'none';
+            error.innerText = "সার্ভারের সাথে সংযোগ করা যাচ্ছে না! পরে চেষ্টা করুন।";
+            error.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
